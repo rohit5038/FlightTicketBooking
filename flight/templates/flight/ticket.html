@@ -161,14 +161,14 @@
                     {% if forloop.counter|divisibleby:2 %}
                         <tr class="tr-odd">
                             <td style="width: 20%; padding-left: 20px;">{{forloop.counter}}</td>
-                            <td style="width: 35%; padding-left: 20px;">{{passenger.last_name | upper}}/{{passenger.first_name | upper}}</td>
+                            <td style="width: 35%; padding-left: 20px;">{{passenger.first_name | upper}} {{passenger.last_name | upper}}</td>
                             <td style="width: 20%; padding-left: 20px;">{{passenger.gender | upper}}</td>
                             <td style="width: 25%; padding-left: 20px;">{{ticket1.seat_class | upper}}</td>
                         </tr>
                     {% else %}
                         <tr class="tr-even">
                             <td style="width: 20%; padding-left: 20px;">{{forloop.counter}}</td>
-                            <td style="width: 35%; padding-left: 20px;">{{passenger.last_name | upper}}/{{passenger.first_name | upper}}</td>
+                            <td style="width: 35%; padding-left: 20px;">{{passenger.first_name | upper}} {{passenger.last_name | upper}}</td>
                             <td style="width: 20%; padding-left: 20px;">{{passenger.gender | upper}}</td>
                             <td style="width: 25%; padding-left: 20px;">{{ticket1.seat_class | upper}}</td>
                         </tr>

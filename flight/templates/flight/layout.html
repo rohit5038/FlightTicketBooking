@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://use.typekit.net/cav5lva.css">
   <link rel="stylesheet" href="{% static 'css/layout_style.css' %}">
   <link rel="icon" type="image/ico" href="/static/img/favicon.ico">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
     integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
     crossorigin="anonymous"></script>
@@ -104,11 +105,17 @@
         </ul>
       </div>
     </nav>
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-      <strong>Message: </strong>{{ message }}
-    </div>
-    {% endfor %}
+    <script>
+      {% if messages %}
+          {% for message in messages %}
+              Swal.fire({
+                  icon: '{{ message.tags }}',
+                  title: 'Message',
+                  text: '{{ message }}',
+              });
+          {% endfor %}
+      {% endif %}
+    </script>
 
     <main>
       {% block body %}{% endblock %}

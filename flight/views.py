@@ -4,8 +4,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.db.models import Min, Max
 
-from datetime import datetime
+from datetime import datetime, timedelta, date
 import math
 from .models import *
 from capstone.utils import render_to_pdf, createticket
@@ -30,11 +31,13 @@ try:
 except:
     pass
 
-# Create your views here.
+# Create yoursor views here.
 
 def index(request):
-    min_date = f"{datetime.now().date().year}-{datetime.now().date().month}-{datetime.now().date().day}"
-    max_date = f"{datetime.now().date().year if (datetime.now().date().month+3)<=12 else datetime.now().date().year+1}-{(datetime.now().date().month + 3) if (datetime.now().date().month+3)<=12 else (datetime.now().date().month+3-12)}-{datetime.now().date().day}"
+    now = datetime.now()
+    min_date = now.strftime("%Y-%m-%d")
+    max_date = (now + timedelta(days=90)).strftime("%Y-%m-%d")
+
     if request.method == 'POST':
         origin = request.POST.get('Origin')
         destination = request.POST.get('Destination')
@@ -136,10 +139,18 @@ def flight(request):
     trip_type = request.GET.get('TripType')
     departdate = request.GET.get('DepartDate')
     depart_date = datetime.strptime(departdate, "%Y-%m-%d")
+    
+    if depart_date.date() < datetime.now().date():
+        messages.error(request, "Departure date cannot be in the past.")
+        return HttpResponseRedirect(reverse("index"))
+
     return_date = None
     if trip_type == '2':
         returndate = request.GET.get('ReturnDate')
         return_date = datetime.strptime(returndate, "%Y-%m-%d")
+        if return_date.date() < depart_date.date():
+            messages.error(request, "Return date must be after departure date.")
+            return HttpResponseRedirect(reverse("index"))
         flightday2 = Week.objects.get(number=return_date.weekday()) ##
         origin2 = Place.objects.get(code=d_place.upper())   ##
         destination2 = Place.objects.get(code=o_place.upper())  ##
@@ -149,58 +160,58 @@ def flight(request):
     destination = Place.objects.get(code=d_place.upper())
     origin = Place.objects.get(code=o_place.upper())
     if seat == 'economy':
-        flights = Flight.objects.filter(depart_day=flightday,origin=origin,destination=destination).exclude(economy_fare=0).order_by('economy_fare')
-        try:
-            max_price = flights.last().economy_fare
-            min_price = flights.first().economy_fare
-        except:
-            max_price = 0
-            min_price = 0
+        flights_qs = Flight.objects.filter(depart_day=flightday,origin=origin,destination=destination).exclude(economy_fare=0)
+        if depart_date.date() == date.today():
+            flights_qs = flights_qs.filter(depart_time__gt=datetime.now().time())
+        price_stats = flights_qs.aggregate(min_price=Min('economy_fare'), max_price=Max('economy_fare'))
+        min_price = price_stats['min_price'] or 0
+        max_price = price_stats['max_price'] or 0
+        flights = flights_qs.order_by('depart_time')
 
-        if trip_type == '2':    ##
-            flights2 = Flight.objects.filter(depart_day=flightday2,origin=origin2,destination=destination2).exclude(economy_fare=0).order_by('economy_fare')    ##
-            try:
-                max_price2 = flights2.last().economy_fare   ##
-                min_price2 = flights2.first().economy_fare  ##
-            except:
-                max_price2 = 0  ##
-                min_price2 = 0  ##
+        if trip_type == '2':
+            flights2_qs = Flight.objects.filter(depart_day=flightday2,origin=origin2,destination=destination2).exclude(economy_fare=0)
+            if return_date.date() == date.today():
+                flights2_qs = flights2_qs.filter(depart_time__gt=datetime.now().time())
+            price_stats2 = flights2_qs.aggregate(min_price=Min('economy_fare'), max_price=Max('economy_fare'))
+            min_price2 = price_stats2['min_price'] or 0
+            max_price2 = price_stats2['max_price'] or 0
+            flights2 = flights2_qs.order_by('depart_time')
                 
     elif seat == 'business':
-        flights = Flight.objects.filter(depart_day=flightday,origin=origin,destination=destination).exclude(business_fare=0).order_by('business_fare')
-        try:
-            max_price = flights.last().business_fare
-            min_price = flights.first().business_fare
-        except:
-            max_price = 0
-            min_price = 0
+        flights_qs = Flight.objects.filter(depart_day=flightday,origin=origin,destination=destination).exclude(business_fare=0)
+        if depart_date.date() == date.today():
+            flights_qs = flights_qs.filter(depart_time__gt=datetime.now().time())
+        price_stats = flights_qs.aggregate(min_price=Min('business_fare'), max_price=Max('business_fare'))
+        min_price = price_stats['min_price'] or 0
+        max_price = price_stats['max_price'] or 0
+        flights = flights_qs.order_by('depart_time')
 
-        if trip_type == '2':    ##
-            flights2 = Flight.objects.filter(depart_day=flightday2,origin=origin2,destination=destination2).exclude(business_fare=0).order_by('business_fare')    ##
-            try:
-                max_price2 = flights2.last().business_fare   ##
-                min_price2 = flights2.first().business_fare  ##
-            except:
-                max_price2 = 0  ##
-                min_price2 = 0  ##
+        if trip_type == '2':
+            flights2_qs = Flight.objects.filter(depart_day=flightday2,origin=origin2,destination=destination2).exclude(business_fare=0)
+            if return_date.date() == date.today():
+                flights2_qs = flights2_qs.filter(depart_time__gt=datetime.now().time())
+            price_stats2 = flights2_qs.aggregate(min_price=Min('business_fare'), max_price=Max('business_fare'))
+            min_price2 = price_stats2['min_price'] or 0
+            max_price2 = price_stats2['max_price'] or 0
+            flights2 = flights2_qs.order_by('depart_time')
 
     elif seat == 'first':
-        flights = Flight.objects.filter(depart_day=flightday,origin=origin,destination=destination).exclude(first_fare=0).order_by('first_fare')
-        try:
-            max_price = flights.last().first_fare
-            min_price = flights.first().first_fare
-        except:
-            max_price = 0
-            min_price = 0
+        flights_qs = Flight.objects.filter(depart_day=flightday,origin=origin,destination=destination).exclude(first_fare=0)
+        if depart_date.date() == date.today():
+            flights_qs = flights_qs.filter(depart_time__gt=datetime.now().time())
+        price_stats = flights_qs.aggregate(min_price=Min('first_fare'), max_price=Max('first_fare'))
+        min_price = price_stats['min_price'] or 0
+        max_price = price_stats['max_price'] or 0
+        flights = flights_qs.order_by('depart_time')
             
-        if trip_type == '2':    ##
-            flights2 = Flight.objects.filter(depart_day=flightday2,origin=origin2,destination=destination2).exclude(first_fare=0).order_by('first_fare')
-            try:
-                max_price2 = flights2.last().first_fare   ##
-                min_price2 = flights2.first().first_fare  ##
-            except:
-                max_price2 = 0  ##
-                min_price2 = 0  ##    ##
+        if trip_type == '2':
+            flights2_qs = Flight.objects.filter(depart_day=flightday2,origin=origin2,destination=destination2).exclude(first_fare=0)
+            if return_date.date() == date.today():
+                flights2_qs = flights2_qs.filter(depart_time__gt=datetime.now().time())
+            price_stats2 = flights2_qs.aggregate(min_price=Min('first_fare'), max_price=Max('first_fare'))
+            min_price2 = price_stats2['min_price'] or 0
+            max_price2 = price_stats2['max_price'] or 0
+            flights2 = flights2_qs.order_by('depart_time')
 
     #print(calendar.day_name[depart_date.weekday()])
     if trip_type == '2':

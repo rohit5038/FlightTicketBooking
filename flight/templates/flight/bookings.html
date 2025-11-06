@@ -123,15 +123,3 @@
     </section>
     
 {% endblock %}
-
-{% block parentBody %}
-    <div class="popup">
-        <div class="small-popup">
-            <div style="margin-bottom: 10px; font-size: 1.1em;"><strong>Do you really want to cancel this ticket?</strong></div>
-            <div class="popup-actions">
-                <button class="btn btn-light" onclick="remove_popup()">Go Back</button>
-                <button class="btn btn-danger" id="cancel_ticket_btn" data-ref="" onclick="cancel_tkt()">Cancel</button>
-            </div>
-        </div>
-    </div>
-{% endblock %}

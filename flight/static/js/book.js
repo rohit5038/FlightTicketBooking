@@ -17,18 +17,30 @@ function add_traveller() {
     let gender = div.querySelectorAll('.gender');
     let gender_val = null
     if(fname.value.trim().length === 0) {
-        alert("Please enter First Name.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Please enter First Name.',
+        });
         return false;
     }
 
     if(lname.value.trim().length === 0) {
-        alert("Please enter Last Name.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Please enter Last Name.',
+        });
         return false;
     }
 
     if (!gender[0].checked) {
         if (!gender[1].checked) {
-            alert("Please select gender.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select gender.',
+            });
             return false;
         }
         else {
@@ -103,6 +115,10 @@ function book_submit() {
     if(parseInt(pcount.value) > 0) {
         return true;
     }
-    alert("Please add atleast one passenger.")
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Please add atleast one passenger.',
+    });
     return false;
 }

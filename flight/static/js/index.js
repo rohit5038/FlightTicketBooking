@@ -119,27 +119,63 @@ function trip_type() {
 
 function flight_search() {
     if(!document.querySelector("#flight-from").dataset.value) {
-        alert("Please select flight origin.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Please select flight origin.'
+        });
         return false;
     }
     if(!document.querySelector("#flight-to").dataset.value) {
-        alert("Please select flight destination.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Please select flight destination.'
+        });
         return false;
     }
     if(document.querySelector("#one-way").checked) {
         if(!document.querySelector("#depart_date").value) {
-            alert("Please select departure date.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select departure date.'
+            });
             return false;
         }
     }
     if(document.querySelector("#round-trip").checked) {
-        if(!document.querySelector("#depart_date").value) {
-            alert("Please select departure date.");
+        const departDateValue = document.querySelector("#depart_date").value;
+        const returnDateValue = document.querySelector("#return_date").value;
+
+        if(!departDateValue) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select departure date.'
+            });
             return false;
         }
-        if(!document.querySelector("#return_date").value) {
-            alert("Please select return date.");
+        if(!returnDateValue) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Please select return date.'
+            });
+            return false;
+        }
+
+        const departDate = new Date(departDateValue);
+        const returnDate = new Date(returnDateValue);
+
+        if (returnDate < departDate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Return date must be after departure date.'
+            });
             return false;
         }
     }
+    return true;
 }
